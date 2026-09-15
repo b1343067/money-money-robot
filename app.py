@@ -22,14 +22,14 @@ def analyze_nlp(t1, t2, t3):
         return "情緒平穩", "無極端偏誤，維持長期投資紀律。", "平穩"
 
 # ==========================================
-# 介面設計：輸入區 (拿掉數字標題)
+# 介面設計：輸入區 (徹底拿掉大標題)
 # ==========================================
 if 'analyzed' not in st.session_state:
     st.session_state.analyzed = False
 
 if not st.session_state.analyzed:
     
-    st.markdown("### Financial Capacity 財務條件")
+    # 直接開始選項，沒有多餘的文字
     inc = st.selectbox("💰 收入與現金流 (Income / Cash Flow)", ["穩定正向", "收支打平", "入不敷出"])
     ast = st.selectbox("💼 可投資資產 (Investable Assets)", ["50萬以下", "50-300萬", "300萬以上"])
     liq = st.selectbox("🏠 流動性需求 (Liquidity Need)", ["高 (隨時需要變現)", "中 (偶有資金需求)", "低 (閒置資金)"])
@@ -38,7 +38,6 @@ if not st.session_state.analyzed:
     
     st.markdown("---")
     
-    st.markdown("### Behavioral & Emotional Assessment 行為/情緒評估")
     q1 = st.text_area("如果您的投資組合一個月下跌 20%，您會怎麼做？為什麼？")
     q2 = st.text_area("最近市場波動很大，您目前對自己的投資有什麼感受？")
     q3 = st.text_area("如果您的朋友靠 AI 股票賺了 30%，而您的投資只有 5%，您會怎麼做？")
@@ -50,12 +49,11 @@ if not st.session_state.analyzed:
         st.rerun()
 
 # ==========================================
-# 介面設計：輸出區 (完美還原 圖 13)
+# 介面設計：輸出區 (完美還原 Image 13)
 # ==========================================
 else:
     d = st.session_state.data
     
-    # 計算 Baseline
     score = 0
     if d["inc"] == "穩定正向": score += 1
     if d["ast"] in ["50-300萬", "300萬以上"]: score += 1
@@ -69,26 +67,36 @@ else:
 
     state, alert, logic_flag = analyze_nlp(d["q1"], d["q2"], d["q3"])
 
-    # --- 完美還原圖 13 上半部 ---
-    st.markdown("<h2 style='text-align: center;'>Dynamic Investor<br>Risk Profile<br><span style='font-size: 24px;'>動態投資人風險畫像</span></h2>", unsafe_allow_html=True)
-    
-    # 畫出圖 13 的「半圓形科技感儀表板」
-    fig_arch = go.Figure(data=[go.Pie(
-        values=[1, 1, 1, 3], # 讓下面那一半隱藏，形成完美半圓
-        marker=dict(colors=['#00d2ff', '#3a7bd5', '#8e2de2', 'rgba(0,0,0,0)']),
-        hole=0.75,
-        rotation=90,
-        direction='clockwise',
-        textinfo='none', hoverinfo='none'
-    )])
-    fig_arch.update_layout(
-        margin=dict(l=0, r=0, t=10, b=0),
-        height=220, showlegend=False,
-        annotations=[dict(text="👤", x=0.5, y=0.35, font_size=60, showarrow=False)]
-    )
-    st.plotly_chart(fig_arch, use_container_width=True)
+    # 💎 完美還原圖 13 的 SVG 向量圖形 (取代原本醜醜的圖)
+    custom_svg_html = """
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
+        <h2 style="margin:0; font-size: 28px; font-weight: 700; color: #E0E0E0;">Dynamic Investor</h2>
+        <h2 style="margin:0; font-size: 28px; font-weight: 700; color: #E0E0E0;">Risk Profile</h2>
+        <p style="margin: 5px 0 20px 0; font-size: 16px; color: #888; font-weight: bold;">動態投資人風險畫像</p>
+        <svg width="240" height="140" viewBox="0 0 240 140">
+            <defs>
+                <linearGradient id="grad1" x1="0%" y1="100%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#00E5FF" />
+                    <stop offset="100%" stop-color="#2979FF" />
+                </linearGradient>
+                <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#2979FF" />
+                    <stop offset="100%" stop-color="#AA00FF" />
+                </linearGradient>
+            </defs>
+            <!-- 左半圓弧 (漸層藍綠) -->
+            <path d="M 40 120 A 80 80 0 0 1 120 40" fill="none" stroke="url(#grad1)" stroke-width="24" stroke-linecap="round" />
+            <!-- 右半圓弧 (漸層藍紫) -->
+            <path d="M 120 40 A 80 80 0 0 1 200 120" fill="none" stroke="url(#grad2)" stroke-width="24" stroke-linecap="round" />
+            <!-- 中間的人像圖示 -->
+            <circle cx="120" cy="85" r="20" fill="#3949AB" />
+            <path d="M 85 140 C 85 110, 155 110, 155 140" fill="#3949AB" />
+        </svg>
+    </div>
+    """
+    st.markdown(custom_svg_html, unsafe_allow_html=True)
 
-    # 圖 13 的三大文字區塊 (乾淨俐落)
+    # 圖 13 的三大文字區塊
     st.markdown(f"#### 📊 Baseline Risk (長期風險承受度)\n**{baseline}**")
     st.write("")
     st.markdown(f"#### ❤️ Current Emotional State (當下情緒狀態)\n**{state}**")
@@ -97,7 +105,7 @@ else:
     
     st.markdown("---")
 
-    # 圖 13 下半部：即時投資建議與圓餅圖
+    # 投資建議圖表
     st.markdown("#### 💡 更個人化、更即時的投資建議")
     
     labels = ["防禦資產 (現金/定存)", "核心部位 (大盤指數)", "衛星部位 (成長型/科技)"]
